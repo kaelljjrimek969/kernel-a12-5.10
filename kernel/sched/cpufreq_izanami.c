@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Reflex CPUFreq governor (based on schedutil)
+ * Izanami CPUFreq governor (based on schedutil)
  * Copyright (C) 2026 Masahito Suzuki
  *
  * schedutil + idle-time accounting based hispeed floor with PELT-
@@ -39,16 +39,16 @@
  * Version Information:
  */
 
-#define CPUFREQ_REFLEX_PROGNAME "Reflex CPUFreq Governor"
-#define CPUFREQ_REFLEX_AUTHOR   "Masahito Suzuki"
+#define CPUFREQ_IZANAMI_PROGNAME "Izanami CPUFreq Governor"
+#define CPUFREQ_IZANAMI_AUTHOR   "Masahito Suzuki"
 
-#define CPUFREQ_REFLEX_VERSION  "0.3.0"
+#define CPUFREQ_IZANAMI_VERSION  "0.3.0"
 
 /**************************************************************
  * Default tunables
  */
-#define CPUFREQ_REFLEX_DEFAULT_HISPEED_WINDOW_US   4000
-#define CPUFREQ_REFLEX_DEFAULT_HISPEED_FILTER_SHIFT   1
+#define CPUFREQ_IZANAMI_DEFAULT_HISPEED_WINDOW_US   4000
+#define CPUFREQ_IZANAMI_DEFAULT_HISPEED_FILTER_SHIFT   1
 
 
 #define IOWAIT_BOOST_MIN	(SCHED_CAPACITY_SCALE / 8)
@@ -762,7 +762,7 @@ static struct governor_attr rfx_rate_limit_us =
 
 static ssize_t version_show(struct gov_attr_set *attr_set, char *buf)
 {
-	return sprintf(buf, "%s\n", CPUFREQ_REFLEX_VERSION);
+	return sprintf(buf, "%s\n", CPUFREQ_IZANAMI_VERSION);
 }
 static struct governor_attr version = __ATTR_RO(version);
 
@@ -793,7 +793,7 @@ static struct kobj_type rfx_tunables_ktype = {
 
 /********************** cpufreq governor interface *********************/
 
-static struct cpufreq_governor reflex_gov;
+static struct cpufreq_governor izanami_gov;
 
 static struct rfx_policy *rfx_policy_alloc(struct cpufreq_policy *policy)
 {
@@ -843,7 +843,7 @@ static int rfx_kthread_create(struct rfx_policy *rfx_pol)
 				"rfxgov:%d",
 				cpumask_first(policy->related_cpus));
 	if (IS_ERR(thread)) {
-		pr_err("reflex: failed to create kthread: %ld\n", PTR_ERR(thread));
+		pr_err("izanami: failed to create kthread: %ld\n", PTR_ERR(thread));
 		return PTR_ERR(thread);
 	}
 
@@ -944,8 +944,8 @@ static int rfx_init(struct cpufreq_policy *policy)
 
 	/* Default tunable values */
 	tunables->rate_limit_us = cpufreq_policy_transition_delay_us(policy);
-	tunables->hispeed_window_us = CPUFREQ_REFLEX_DEFAULT_HISPEED_WINDOW_US;
-	tunables->hispeed_filter_shift = CPUFREQ_REFLEX_DEFAULT_HISPEED_FILTER_SHIFT;
+	tunables->hispeed_window_us = CPUFREQ_IZANAMI_DEFAULT_HISPEED_WINDOW_US;
+	tunables->hispeed_filter_shift = CPUFREQ_IZANAMI_DEFAULT_HISPEED_FILTER_SHIFT;
 
 	policy->governor_data = rfx_pol;
 	rfx_pol->tunables = tunables;
@@ -953,7 +953,7 @@ static int rfx_init(struct cpufreq_policy *policy)
 	ret = kobject_init_and_add(&tunables->attr_set.kobj,
 				   &rfx_tunables_ktype,
 				   get_governor_parent_kobj(policy), "%s",
-				   reflex_gov.name);
+				   izanami_gov.name);
 	if (ret)
 		goto fail;
 
@@ -976,7 +976,7 @@ free_rfx_pol:
 disable_fast_switch:
 	cpufreq_disable_fast_switch(policy);
 
-	pr_err("reflex: initialization failed (error %d)\n", ret);
+	pr_err("izanami: initialization failed (error %d)\n", ret);
 	return ret;
 }
 
@@ -1069,8 +1069,8 @@ static void rfx_limits(struct cpufreq_policy *policy)
 	WRITE_ONCE(rfx_pol->limits_changed, true);
 }
 
-static struct cpufreq_governor reflex_gov = {
-	.name			= "reflex",
+static struct cpufreq_governor izanami_gov = {
+	.name			= "izanami",
 	.owner			= THIS_MODULE,
 	.flags			= CPUFREQ_GOV_DYNAMIC_SWITCHING,
 	.init			= rfx_init,
@@ -1080,28 +1080,28 @@ static struct cpufreq_governor reflex_gov = {
 	.limits			= rfx_limits,
 };
 
-#ifdef CONFIG_CPU_FREQ_DEFAULT_GOV_REFLEX
+#ifdef CONFIG_CPU_FREQ_DEFAULT_GOV_IZANAMI
 struct cpufreq_governor *cpufreq_default_governor(void)
 {
-	return &reflex_gov;
+	return &izanami_gov;
 }
 #endif
 
-static int __init reflex_gov_init(void)
+static int __init izanami_gov_init(void)
 {
-	pr_info("%s %s by %s\n", CPUFREQ_REFLEX_PROGNAME,
-		CPUFREQ_REFLEX_VERSION, CPUFREQ_REFLEX_AUTHOR);
-	return cpufreq_register_governor(&reflex_gov);
+	pr_info("%s %s by %s\n", CPUFREQ_IZANAMI_PROGNAME,
+		CPUFREQ_IZANAMI_VERSION, CPUFREQ_IZANAMI_AUTHOR);
+	return cpufreq_register_governor(&izanami_gov);
 }
 
-static void __exit reflex_gov_exit(void)
+static void __exit izanami_gov_exit(void)
 {
-	cpufreq_unregister_governor(&reflex_gov);
+	cpufreq_unregister_governor(&izanami_gov);
 }
 
-module_init(reflex_gov_init);
-module_exit(reflex_gov_exit);
+module_init(izanami_gov_init);
+module_exit(izanami_gov_exit);
 
-MODULE_AUTHOR(CPUFREQ_REFLEX_AUTHOR);
+MODULE_AUTHOR(CPUFREQ_IZANAMI_AUTHOR);
 MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION(CPUFREQ_REFLEX_PROGNAME);
+MODULE_DESCRIPTION(CPUFREQ_IZANAMI_PROGNAME);

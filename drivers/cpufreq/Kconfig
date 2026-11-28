@@ -220,8 +220,8 @@ config CPU_FREQ_GOV_SCHEDUTIL
 
 	  If in doubt, say N.
 
-config CPU_FREQ_GOV_REFLEX
-	tristate "'reflex' cpufreq policy governor"
+config CPU_FREQ_GOV_IZANAMI
+	tristate "'izanami' cpufreq policy governor"
 	depends on CPU_FREQ && SMP
 	select CPU_FREQ_GOV_ATTR_SET
 	select IRQ_WORK
@@ -239,7 +239,7 @@ config CPU_FREQ_GOV_REFLEX
 	  ramp-up behaviour, EWMA parameters, and idle thresholds.
 
 	  To compile this driver as a module, choose M here: the
-	  module will be called cpufreq_reflex.
+	  module will be called cpufreq_izanami.
 
 	  If in doubt, say M.
 
